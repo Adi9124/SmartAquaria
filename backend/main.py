@@ -3,7 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
 import datetime
-from db import get_db_connection, init_db
+try:
+    from db import get_db_connection, init_db
+except ImportError:
+    from backend.db import get_db_connection, init_db
 
 # Initialize FastAPI App
 app = FastAPI(
