@@ -3,13 +3,13 @@ import {
   Activity, Cpu, Radio, Sparkles, ChevronDown, CheckCircle, Eye, ShieldCheck, 
   Camera, Zap, Target, Layers, Play, Pause, BarChart2, Thermometer, Droplet, 
   Wind, Sun, Waves, Sliders, Flame, TestTube, Utensils, Award, Download, Clock, 
-  HeartPulse, TrendingUp, Brain, BookOpen, FileText, HelpCircle, Terminal, RefreshCw, AlertTriangle
+  HeartPulse, TrendingUp, Brain, BookOpen, FileText, HelpCircle, Terminal, RefreshCw, AlertTriangle,
+  Compass, Grid, Settings, Shield, Maximize2
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 import { SPECIES_PROFILES, INITIAL_ACTUATOR_STATE } from './data/speciesData';
 import { AquariaSimulator } from './utils/simulationEngine';
-import { ApiService } from './services/api';
 
 export function AppDemo() {
   const [selectedSpecies, setSelectedSpecies] = useState(SPECIES_PROFILES[0]);
@@ -20,6 +20,7 @@ export function AppDemo() {
   const [isPlaying, setIsPlaying] = useState(true);
   const [fps, setFps] = useState(60);
   const [activeTab, setActiveTab] = useState('REASONING');
+  const [activeNav, setActiveNav] = useState('OVERVIEW');
 
   const canvasRef = useRef(null);
   const simulatorRef = useRef(null);
@@ -37,11 +38,10 @@ export function AppDemo() {
         setTelemetry({ ...simulatorRef.current.telemetry });
       }
     }, 100);
-
     return () => clearInterval(interval);
   }, []);
 
-  // Render HTML5 Canvas Simulator with corner reticles & glowing overlays
+  // HTML5 Canvas Rendering for Cinematic HUD Stream
   useEffect(() => {
     let animationFrameId;
     let lastTime = performance.now();
@@ -62,7 +62,7 @@ export function AppDemo() {
         lastTime = now;
       }
 
-      // Background
+      // Background Environment
       if (visionOverlay === 'DEPTH') {
         const depthGrad = ctx.createLinearGradient(0, 0, width, height);
         depthGrad.addColorStop(0, '#000000');
@@ -71,9 +71,9 @@ export function AppDemo() {
         ctx.fillStyle = depthGrad;
         ctx.fillRect(0, 0, width, height);
       } else if (visionOverlay === 'HEATMAP') {
-        ctx.fillStyle = '#030712';
+        ctx.fillStyle = '#02050B';
         ctx.fillRect(0, 0, width, height);
-        const heatGrad = ctx.createRadialGradient(280, 260, 10, 280, 260, 180);
+        const heatGrad = ctx.createRadialGradient(320, 240, 10, 320, 240, 200);
         heatGrad.addColorStop(0, 'rgba(255, 0, 80, 0.85)');
         heatGrad.addColorStop(0.4, 'rgba(255, 180, 0, 0.5)');
         heatGrad.addColorStop(0.8, 'rgba(0, 242, 254, 0.2)');
@@ -88,13 +88,13 @@ export function AppDemo() {
         ctx.fillStyle = tankGrad;
         ctx.fillRect(0, 0, width, height);
 
-        // Cyber Grid Lines
-        ctx.strokeStyle = 'rgba(0, 242, 254, 0.04)';
+        // Cyber Grid Lines Overlay
+        ctx.strokeStyle = 'rgba(0, 242, 254, 0.05)';
         ctx.lineWidth = 1;
-        for (let x = 0; x < width; x += 30) {
+        for (let x = 0; x < width; x += 40) {
           ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
         }
-        for (let y = 0; y < height; y += 30) {
+        for (let y = 0; y < height; y += 40) {
           ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
         }
 
@@ -121,9 +121,7 @@ export function AppDemo() {
           const ex = simulatorRef.current.nest.x - 35 + col * 4.8;
           const ey = simulatorRef.current.nest.y - 12 + row * 4.8;
           ctx.fillStyle = '#FFA500';
-          ctx.beginPath();
-          ctx.arc(ex, ey, 2.3, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.beginPath(); ctx.arc(ex, ey, 2.3, 0, Math.PI * 2); ctx.fill();
         }
         ctx.restore();
 
@@ -132,9 +130,7 @@ export function AppDemo() {
         for (let i = 0; i < 10; i++) {
           const bx = 85 + Math.sin(simulatorRef.current.time * 2.5 + i) * 8;
           const by = (height - 40 - (simulatorRef.current.time * 45 + i * 32) % (height - 60));
-          ctx.beginPath();
-          ctx.arc(bx, by, 2 + (i % 3), 0, Math.PI * 2);
-          ctx.fill();
+          ctx.beginPath(); ctx.arc(bx, by, 2 + (i % 3), 0, Math.PI * 2); ctx.fill();
         }
       }
 
@@ -169,9 +165,7 @@ export function AppDemo() {
         bodyGrad.addColorStop(0, fish.color);
         bodyGrad.addColorStop(1, fish.secondaryColor);
         ctx.fillStyle = bodyGrad;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, fish.size * 0.6, fish.size * 0.35, 0, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.beginPath(); ctx.ellipse(0, 0, fish.size * 0.6, fish.size * 0.35, 0, 0, Math.PI * 2); ctx.fill();
 
         ctx.fillStyle = '#FFFFFF';
         ctx.beginPath(); ctx.arc(fish.size * 0.35, -fish.size * 0.1, 4.5, 0, Math.PI * 2); ctx.fill();
@@ -248,7 +242,7 @@ export function AppDemo() {
     return () => cancelAnimationFrame(animationFrameId);
   }, [visionOverlay, isPlaying, scenarioMode]);
 
-  // Data Fusion Score & 24h Prediction calculation
+  // Data Fusion Score Calculation
   const opt = selectedSpecies.optimalSensors;
   const tempVar = Math.abs(telemetry.temperature - opt.temperature.target);
   const phVar = Math.abs(telemetry.ph - opt.ph.target);
@@ -263,318 +257,255 @@ export function AppDemo() {
   const classification = simulatorRef.current.aiClassification;
 
   return (
-    <div style={{ background: '#030712', minHeight: '100vh', color: '#F8FAFC', padding: '16px', fontFamily: 'Inter, sans-serif' }}>
+    <div style={{ background: '#02050B', minHeight: '100vh', color: '#F8FAFC', padding: '12px', fontFamily: 'Inter, sans-serif', display: 'flex', flexDirection: 'column', gap: '12px' }}>
       
-      {/* DEMO NOTICE BANNER */}
-      <div style={{ background: 'linear-gradient(90deg, #8B5CF6 0%, #3B82F6 100%)', color: '#FFFFFF', padding: '8px 16px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '700', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', boxShadow: '0 0 20px rgba(139, 92, 246, 0.4)' }}>
+      {/* TOP DEMO NOTICE */}
+      <div style={{ background: 'linear-gradient(90deg, #8B5CF6 0%, #00F2FE 100%)', color: '#FFFFFF', padding: '8px 16px', borderRadius: '8px', fontSize: '0.78rem', fontWeight: '800', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 0 25px rgba(0, 242, 254, 0.4)' }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Sparkles size={16} /> <strong>NEXT-GEN DEMO UI PREVIEW MODE</strong> (Test Version — Main App Remains Untouched)
+          <Sparkles size={16} /> <strong>NEW 3-COLUMN TACTICAL COCKPIT DEMO UI</strong> (Main Project Remains 100% Untouched)
         </span>
-        <button 
-          onClick={() => window.location.href = '/'} 
-          style={{ background: '#FFFFFF', color: '#030712', border: 'none', padding: '4px 12px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '800', cursor: 'pointer' }}
-        >
-          Return to Main Project
+        <button onClick={() => window.location.href = '/'} style={{ background: '#FFFFFF', color: '#02050B', border: 'none', padding: '4px 12px', borderRadius: '4px', fontSize: '0.72rem', fontWeight: '900', cursor: 'pointer' }}>
+          Back to Original Layout
         </button>
       </div>
 
-      {/* TOP HEADER */}
-      <header className="glass-panel" style={{ padding: '16px 24px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #00F2FE 0%, #8B5CF6 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(0, 242, 254, 0.4)' }}>
-              <Activity size={24} color="#030712" strokeWidth={2.5} />
-            </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h1 style={{ fontSize: '1.4rem', fontWeight: '900', background: 'linear-gradient(90deg, #FFFFFF, #00F2FE)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                  SmartAquaria Bio-Dome SCADA
-                </h1>
-                <span className="badge badge-cyan" style={{ fontSize: '0.65rem' }}>Team 28 • Python FastAPI</span>
-              </div>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                Next-Gen Edge AI & Multi-Sensor Time-Series Data Fusion Control Deck
-              </p>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <select
-              value={selectedSpecies.id}
-              onChange={(e) => {
-                const target = SPECIES_PROFILES.find(s => s.id === e.target.value);
-                if (target) {
-                  setSelectedSpecies(target);
-                  simulatorRef.current.setSpecies(target);
-                }
-              }}
-              style={{ background: '#091424', color: '#FFFFFF', border: '1px solid var(--border-cyan)', padding: '8px 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: '700' }}
-            >
-              {SPECIES_PROFILES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-
-            <button 
-              onClick={() => setAiMode(!aiMode)}
-              style={{ background: aiMode ? 'rgba(0, 242, 254, 0.15)' : 'rgba(245, 158, 11, 0.15)', color: aiMode ? '#00F2FE' : '#F59E0B', border: `1px solid ${aiMode ? '#00F2FE' : '#F59E0B'}`, padding: '8px 14px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-            >
-              <Cpu size={15} /> {aiMode ? 'CLOSED-LOOP AI AUTO' : 'MANUAL OVERRIDE'}
-            </button>
-          </div>
-        </div>
-
-        {/* 7-STAGE WORKING PIPELINE STEPPER */}
-        <div style={{ background: 'rgba(4, 12, 24, 0.8)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '10px 16px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', fontSize: '0.75rem' }}>
-          <span style={{ fontWeight: '800', color: 'var(--accent-cyan)' }}>7-Stage Working Architecture (Section 5):</span>
-          {[
-            { step: '1. Sense', desc: 'Camera & IoT Sensors' },
-            { step: '2. Preprocess', desc: 'Noise Clean & Drift Check' },
-            { step: '3. Detect', desc: 'YOLO Tracking' },
-            { step: '4. Fuse', desc: 'Data Fusion' },
-            { step: '5. Predict', desc: '24h Spawning Window' },
-            { step: '6. Act', desc: 'Bounded Control' },
-            { step: '7. Dashboard', desc: 'SCADA Telemetry' }
-          ].map((stg, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <CheckCircle size={12} color="var(--accent-emerald)" />
-              <span style={{ fontWeight: '700', color: '#FFFFFF' }}>{stg.step}</span>
-              <span style={{ color: 'var(--text-dim)', fontSize: '0.68rem' }}>({stg.desc})</span>
-            </div>
-          ))}
-        </div>
-      </header>
-
-      {/* MAIN CONTENT GRID */}
-      <div className="grid-main">
+      {/* 3-COLUMN COCKPIT LAYOUT */}
+      <div style={{ display: 'grid', gridTemplateColumns: '70px 1.4fr 1fr', gap: '14px', alignItems: 'start' }}>
         
-        {/* LEFT COLUMN: CAMERA HUD + ANALYTICS + REASONING */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {/* COLUMN 1: LEFT VERTICAL NAVIGATION & SENSOR QUICK STACK */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
           
-          {/* CAMERA FEED PANEL */}
-          <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+          {/* LOGO BADGE */}
+          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'linear-gradient(135deg, #00F2FE 0%, #3B82F6 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(0, 242, 254, 0.5)' }}>
+            <Activity size={24} color="#02050B" strokeWidth={2.5} />
+          </div>
+
+          {/* NAV ICONS */}
+          <div className="glass-panel" style={{ padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: '16px', borderRadius: '14px' }}>
+            {[
+              { id: 'OVERVIEW', icon: Grid, label: 'Overview' },
+              { id: 'VISION', icon: Camera, label: 'Vision HUD' },
+              { id: 'TELEMETRY', icon: Activity, label: 'Telemetry' },
+              { id: 'ACTUATOR', icon: Sliders, label: 'Actuators' },
+              { id: 'PREDICT', icon: Clock, label: 'Forecast' },
+              { id: 'RESEARCH', icon: BookOpen, label: 'Citations' }
+            ].map(item => {
+              const Icon = item.icon;
+              const active = activeNav === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveNav(item.id)}
+                  title={item.label}
+                  style={{ background: active ? 'var(--accent-cyan)' : 'transparent', color: active ? '#02050B' : 'var(--text-muted)', border: 'none', width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: active ? '0 0 14px rgba(0, 242, 254, 0.5)' : 'none', transition: 'all 0.2s ease' }}
+                >
+                  <Icon size={20} />
+                </button>
+              );
+            })}
+          </div>
+
+          {/* VERTICAL SENSOR DIAL STACK */}
+          <div className="glass-panel" style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center', borderRadius: '14px' }}>
+            <div style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--accent-cyan)', textAlign: 'center' }}>SENSORS</div>
+            
+            <div style={{ textAlign: 'center' }} title="Water Temperature">
+              <Thermometer size={16} color="#00F2FE" />
+              <div style={{ fontSize: '0.72rem', fontWeight: '900', color: '#FFFFFF' }}>{telemetry.temperature}°C</div>
+            </div>
+
+            <div style={{ textAlign: 'center' }} title="pH Balance">
+              <Droplet size={16} color="#3B82F6" />
+              <div style={{ fontSize: '0.72rem', fontWeight: '900', color: '#FFFFFF' }}>{telemetry.ph}</div>
+            </div>
+
+            <div style={{ textAlign: 'center' }} title="Dissolved Oxygen">
+              <Wind size={16} color="#10B981" />
+              <div style={{ fontSize: '0.72rem', fontWeight: '900', color: '#FFFFFF' }}>{telemetry.dissolvedOxygen}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* COLUMN 2: CENTER HERO CINEMATIC CAMERA HUD & NEURAL ANALYSIS */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          
+          {/* HEADER BAR */}
+          <div className="glass-panel" style={{ padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+            <div>
+              <h1 style={{ fontSize: '1.25rem', fontWeight: '900', background: 'linear-gradient(90deg, #FFFFFF, #00F2FE)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                SmartAquaria Bio-Dome Cockpit
+              </h1>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Team 28 • Edge AI Tactical Aquaculture Command Center</div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <select
+                value={selectedSpecies.id}
+                onChange={(e) => {
+                  const target = SPECIES_PROFILES.find(s => s.id === e.target.value);
+                  if (target) {
+                    setSelectedSpecies(target);
+                    simulatorRef.current.setSpecies(target);
+                  }
+                }}
+                style={{ background: '#091424', color: '#FFFFFF', border: '1px solid var(--border-cyan)', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '700' }}
+              >
+                {SPECIES_PROFILES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+
+              <button 
+                onClick={() => setAiMode(!aiMode)}
+                style={{ background: aiMode ? 'rgba(0, 242, 254, 0.15)' : 'rgba(245, 158, 11, 0.15)', color: aiMode ? '#00F2FE' : '#F59E0B', border: `1px solid ${aiMode ? '#00F2FE' : '#F59E0B'}`, padding: '6px 12px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '800', cursor: 'pointer' }}
+              >
+                {aiMode ? 'AI AUTO' : 'MANUAL'}
+              </button>
+            </div>
+          </div>
+
+          {/* 7-STAGE PIPELINE STEPPER BAR */}
+          <div style={{ background: 'rgba(4, 12, 24, 0.8)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '8px 14px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px', fontSize: '0.72rem' }}>
+            <span style={{ fontWeight: '800', color: 'var(--accent-cyan)' }}>7-Stage Architecture (Section 5):</span>
+            {['1. Sense', '2. Preprocess', '3. Detect', '4. Fuse', '5. Predict', '6. Act', '7. Dashboard'].map((s, i) => (
+              <span key={i} style={{ color: '#FFFFFF', fontWeight: '600' }}>✓ {s}</span>
+            ))}
+          </div>
+
+          {/* CINEMATIC CAMERA HUD STREAM */}
+          <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Camera size={20} color="var(--accent-cyan)" />
-                <h2 style={{ fontSize: '1.1rem', fontWeight: '800' }}>Tactical Bio-Vision Camera HUD</h2>
+                <Camera size={18} color="var(--accent-cyan)" />
+                <span style={{ fontSize: '0.95rem', fontWeight: '800' }}>Tactical Vision Stream</span>
                 <span className="badge badge-emerald"><span className="status-dot active"></span> LIVE CV {fps} FPS</span>
               </div>
 
-              <div style={{ display: 'flex', gap: '6px', background: 'rgba(255, 255, 255, 0.04)', padding: '4px', borderRadius: '8px' }}>
-                {['RGB', 'YOLO', 'POSE', 'HEATMAP', 'DEPTH'].map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => setVisionOverlay(m)}
-                    style={{ background: visionOverlay === m ? '#00F2FE' : 'transparent', color: visionOverlay === m ? '#030712' : 'var(--text-muted)', border: 'none', padding: '5px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '800', cursor: 'pointer' }}
-                  >
-                    {m}
-                  </button>
+              <div style={{ display: 'flex', gap: '4px', background: 'rgba(255, 255, 255, 0.04)', padding: '3px', borderRadius: '6px' }}>
+                {['RGB', 'YOLO', 'POSE', 'HEATMAP', 'DEPTH'].map(m => (
+                  <button key={m} onClick={() => setVisionOverlay(m)} style={{ background: visionOverlay === m ? '#00F2FE' : 'transparent', color: visionOverlay === m ? '#02050B' : 'var(--text-muted)', border: 'none', padding: '4px 8px', borderRadius: '4px', fontSize: '0.72rem', fontWeight: '800', cursor: 'pointer' }}>{m}</button>
                 ))}
               </div>
             </div>
 
-            <div style={{ position: 'relative', width: '100%', height: '370px', borderRadius: '14px', overflow: 'hidden', border: '1px solid var(--border-cyan)', boxShadow: '0 0 25px rgba(0, 242, 254, 0.2)' }}>
-              <canvas ref={canvasRef} width={640} height={370} style={{ width: '100%', height: '100%', display: 'block' }} />
+            <div style={{ position: 'relative', width: '100%', height: '350px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-cyan)' }}>
+              <canvas ref={canvasRef} width={640} height={350} style={{ width: '100%', height: '100%', display: 'block' }} />
               
-              <div style={{ position: 'absolute', top: '12px', left: '12px', right: '12px', display: 'flex', justifyContent: 'space-between', pointerEvents: 'none' }}>
-                <div style={{ background: 'rgba(3, 7, 18, 0.88)', padding: '4px 10px', borderRadius: '6px', fontSize: '0.75rem', fontFamily: 'JetBrains Mono', color: 'var(--accent-cyan)' }}>
-                  CAM-01 [TANK #1] • 1080p @ 60fps • Neural: YOLOv8-FishPose
+              <div style={{ position: 'absolute', top: '10px', left: '10px', right: '10px', display: 'flex', justifyContent: 'space-between', pointerEvents: 'none' }}>
+                <div style={{ background: 'rgba(2, 5, 11, 0.85)', padding: '4px 8px', borderRadius: '6px', fontSize: '0.72rem', fontFamily: 'JetBrains Mono', color: 'var(--accent-cyan)' }}>
+                  CAM-01 [MAIN TANK] • 1080p @ 60fps
                 </div>
-                <div style={{ background: 'rgba(3, 7, 18, 0.88)', padding: '4px 10px', borderRadius: '6px', fontSize: '0.75rem', color: 'var(--accent-emerald)', fontFamily: 'JetBrains Mono' }}>
+                <div style={{ background: 'rgba(2, 5, 11, 0.85)', padding: '4px 8px', borderRadius: '6px', fontSize: '0.72rem', color: 'var(--accent-emerald)', fontFamily: 'JetBrains Mono' }}>
                   STATE: <strong>{simulatorRef.current.behaviorState}</strong>
                 </div>
               </div>
             </div>
 
-            {/* NEURAL BEHAVIOR METERS */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+            {/* RADIAL BEHAVIOR BAR */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
               {[
-                { label: '💃 Courtship Dancing', val: classification.courtship, color: '#00F2FE' },
-                { label: '🧽 Substrate Cleaning', val: classification.cleaning, color: '#3B82F6' },
-                { label: '🥚 Egg Deposit', val: classification.eggLaying, color: '#F59E0B' },
-                { label: '🛡️ Parental Fanning', val: classification.parentalCare, color: '#10B981' }
+                { label: 'Courtship', val: classification.courtship, color: '#00F2FE' },
+                { label: 'Cleaning', val: classification.cleaning, color: '#3B82F6' },
+                { label: 'Egg Deposit', val: classification.eggLaying, color: '#F59E0B' },
+                { label: 'Parental Care', val: classification.parentalCare, color: '#10B981' }
               ].map(b => (
-                <div key={b.label} style={{ background: 'rgba(4, 12, 24, 0.6)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    <span>{b.label}</span>
-                    <strong style={{ color: b.color }}>{b.val}%</strong>
-                  </div>
-                  <div style={{ width: '100%', height: '6px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '3px', marginTop: '6px', overflow: 'hidden' }}>
-                    <div style={{ width: `${b.val}%`, height: '100%', background: b.color, boxShadow: `0 0 10px ${b.color}` }} />
+                <div key={b.label} style={{ background: 'rgba(4, 12, 24, 0.6)', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{b.label}</div>
+                  <div style={{ fontSize: '1rem', fontWeight: '900', color: b.color, margin: '2px 0' }}>{b.val}%</div>
+                  <div style={{ width: '100%', height: '4px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+                    <div style={{ width: `${b.val}%`, height: '100%', background: b.color }} />
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* SPAWNING PREDICTION & SUCCESS METRICS (SECTION 7 & 12) */}
-          <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Award size={20} color="var(--accent-cyan)" />
-                <h2 style={{ fontSize: '1.1rem', fontWeight: '800' }}>Data Fusion & 24h Target Spawning Window Predictor</h2>
-              </div>
-              <button onClick={() => confetti({ particleCount: 80, spread: 60 })} className="btn btn-primary" style={{ fontSize: '0.75rem' }}>
-                <Download size={14} /> Export Hackathon Log
-              </button>
+          {/* AI REASONING TERMINAL LOG */}
+          <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Terminal size={16} /> Real-Time XAI Neural Reasoning Stream
             </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '14px' }}>
-              <div style={{ background: 'rgba(0, 242, 254, 0.05)', border: '1px solid rgba(0, 242, 254, 0.3)', borderRadius: '12px', padding: '16px' }}>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Fused Breeding Score</div>
-                <div style={{ fontSize: '1.8rem', fontWeight: '900', color: 'var(--accent-cyan)', margin: '4px 0' }}>{fusedScore} <span style={{ fontSize: '0.9rem', color: 'var(--text-dim)' }}>/ 100</span></div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--accent-emerald)' }}>Vision AI + Sensor Fusion Active</div>
-              </div>
-
-              <div style={{ background: 'rgba(245, 158, 11, 0.05)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '12px', padding: '16px' }}>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Predicted 24h Spawning Window</div>
-                <div style={{ fontSize: '1.4rem', fontWeight: '900', color: 'var(--accent-amber)', margin: '4px 0' }}>In {predMin} - {predMax} Hours</div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>Target 24h Predictive Window</div>
-              </div>
-
-              <div style={{ background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '12px', padding: '16px' }}>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Egg Viability Index</div>
-                <div style={{ fontSize: '1.8rem', fontWeight: '900', color: 'var(--accent-emerald)', margin: '4px 0' }}>{viability}%</div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>High environmental stability</div>
-              </div>
-
-              <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-subtle)', borderRadius: '12px', padding: '16px' }}>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Forecasted Healthy Fry</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: '900', color: '#FFFFFF', margin: '4px 0' }}>~{fryCount} Fry</div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>Clutch: {simulatorRef.current.nest.eggCount} eggs</div>
-              </div>
+            <div style={{ background: 'rgba(2, 5, 11, 0.9)', padding: '12px', borderRadius: '8px', fontFamily: 'JetBrains Mono', fontSize: '0.72rem', maxHeight: '140px', overflowY: 'auto' }}>
+              {aiLogs.map(l => (
+                <div key={l.id} style={{ marginBottom: '4px' }}><span style={{ color: 'var(--text-dim)' }}>[{l.time}]</span> <strong style={{ color: 'var(--accent-cyan)' }}>[{l.title}]</strong> {l.text}</div>
+              ))}
             </div>
-
-            {/* SECTION 12 SUCCESS METRICS GRID */}
-            <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '14px', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--accent-emerald)', marginBottom: '10px' }}>
-                🛡️ Section 12 Hackathon Success & Safety Metrics Compliance
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', fontSize: '0.75rem' }}>
-                <div style={{ background: 'rgba(4, 12, 24, 0.6)', padding: '8px 12px', borderRadius: '6px' }}>CV Detection F1 Score: <strong style={{ color: 'var(--accent-emerald)' }}>94.2%</strong></div>
-                <div style={{ background: 'rgba(4, 12, 24, 0.6)', padding: '8px 12px', borderRadius: '6px' }}>Prediction Error: <strong style={{ color: 'var(--accent-cyan)' }}>±1.8 Hours</strong></div>
-                <div style={{ background: 'rgba(4, 12, 24, 0.6)', padding: '8px 12px', borderRadius: '6px' }}>Sensor Reliability: <strong style={{ color: 'var(--accent-emerald)' }}>99.6%</strong></div>
-                <div style={{ background: 'rgba(4, 12, 24, 0.6)', padding: '8px 12px', borderRadius: '6px' }}>Safe-Control Compliance: <strong style={{ color: 'var(--accent-emerald)' }}>100.0%</strong></div>
-              </div>
-            </div>
-          </div>
-
-          {/* AI REASONING & RESEARCH CITATIONS DRAWER */}
-          <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Brain size={20} color="var(--accent-cyan)" />
-                <h2 style={{ fontSize: '1.1rem', fontWeight: '800' }}>AI Decision Engine, Research & FAQ</h2>
-              </div>
-
-              <div style={{ display: 'flex', gap: '6px', background: 'rgba(255, 255, 255, 0.04)', padding: '4px', borderRadius: '8px' }}>
-                {['REASONING', 'PLAYBOOK', 'RESEARCH', 'FAQ'].map(t => (
-                  <button key={t} onClick={() => setActiveTab(t)} style={{ background: activeTab === t ? '#00F2FE' : 'transparent', color: activeTab === t ? '#030712' : 'var(--text-muted)', border: 'none', padding: '5px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '800', cursor: 'pointer' }}>
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {activeTab === 'REASONING' && (
-              <div style={{ background: 'rgba(4, 12, 24, 0.8)', padding: '14px', borderRadius: '8px', fontFamily: 'JetBrains Mono', fontSize: '0.75rem', maxHeight: '180px', overflowY: 'auto' }}>
-                {aiLogs.map(l => (
-                  <div key={l.id} style={{ marginBottom: '6px' }}><span style={{ color: 'var(--text-dim)' }}>[{l.time}]</span> <strong style={{ color: 'var(--accent-cyan)' }}>[{l.title}]</strong> {l.text}</div>
-                ))}
-              </div>
-            )}
-
-            {activeTab === 'RESEARCH' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.78rem' }}>
-                <div style={{ fontWeight: '800', color: 'var(--accent-cyan)' }}>📚 Section 13: Literature & Research Citations Grounding SmartAquaria</div>
-                <div>1. <strong>Prapti et al. (2022)</strong>, <em>Reviews in Aquaculture</em> (DOI: 10.1111/raq.12637) - IoT aquaculture monitoring.</div>
-                <div>2. <strong>Flores-Iwasaki et al. (2025)</strong>, <em>AgriEngineering</em> (DOI: 10.3390/agriengineering7030078) - Water quality sensors.</div>
-                <div>3. <strong>He et al. (2026)</strong>, <em>Computer Science Review</em> (DOI: 10.1016/j.cosrev.2026.100896) - CV for fish behaviour.</div>
-                <div>4. <strong>FAO TECA (2022)</strong> - IoT water-quality parameters in fish farming.</div>
-              </div>
-            )}
-
-            {activeTab === 'FAQ' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.78rem' }}>
-                <div style={{ fontWeight: '800', color: 'var(--accent-amber)' }}>❓ Section 15-20: System FAQ & Project Q&A Guide</div>
-                <div><strong>Q: Why use both Camera and Water Sensors?</strong><br/><span style={{ color: 'var(--text-muted)' }}>Cameras observe physical courtship movement; sensors measure invisible parameters like pH and dissolved oxygen.</span></div>
-                <div><strong>Q: What is Closed-Loop Control with Bounded Safety?</strong><br/><span style={{ color: 'var(--text-muted)' }}>Observe ➔ Predict ➔ Execute safe bounded action ➔ Observe again, guarded by hard actuator limits and human override.</span></div>
-              </div>
-            )}
           </div>
 
         </div>
 
-        {/* RIGHT COLUMN: TELEMETRY & ACTUATOR HARDWARE CONTROLS */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {/* COLUMN 3: RIGHT 24H PREDICTION CARD & CLOSED-LOOP ACTUATORS */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           
-          {/* TELEMETRY CARDS */}
-          <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* 24-HOUR SPAWNING PREDICTOR RING CARD (SECTION 7) */}
+          <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px', background: 'linear-gradient(135deg, rgba(0, 242, 254, 0.06) 0%, rgba(245, 158, 11, 0.06) 100%)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Activity size={20} color="var(--accent-cyan)" />
-                <h2 style={{ fontSize: '1.1rem', fontWeight: '800' }}>Environmental IoT Telemetry</h2>
-              </div>
-              <span style={{ fontSize: '0.75rem', fontFamily: 'JetBrains Mono', color: 'var(--text-dim)' }}>Sampling: 10 Hz</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--accent-amber)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Clock size={16} /> 24h Target Spawning Window Predictor
+              </span>
+              <button onClick={() => confetti({ particleCount: 60 })} className="btn btn-primary" style={{ fontSize: '0.7rem', padding: '4px 8px' }}>
+                Export Log
+              </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-              {[
-                { title: 'Water Temperature', val: `${telemetry.temperature} °C`, target: `Target: ${opt.temperature.target}°C`, icon: Thermometer, color: '#00F2FE' },
-                { title: 'pH Level', val: `${telemetry.ph} pH`, target: `Target: ${opt.ph.target} pH`, icon: Droplet, color: '#3B82F6' },
-                { title: 'Dissolved Oxygen', val: `${telemetry.dissolvedOxygen} mg/L`, target: `Target: > ${opt.dissolvedOxygen.min} mg/L`, icon: Wind, color: '#10B981' },
-                { title: 'Ammonia (NH3)', val: `${telemetry.ammonia} ppm`, target: `Safe: < 0.02 ppm`, icon: ShieldCheck, color: telemetry.ammonia > 0.03 ? '#EF4444' : '#10B981' },
-                { title: 'Photoperiod Spectrum', val: `${telemetry.lightSpectrum} Lux`, target: `450nm Blue Dusk Spectrum`, icon: Sun, color: '#F59E0B' },
-                { title: 'Water Turbidity', val: `${telemetry.turbidity} NTU`, target: `Crystal Clear (< 1.0 NTU)`, icon: Waves, color: '#00F2FE' }
-              ].map(s => {
-                const Icon = s.icon;
-                return (
-                  <div key={s.title} style={{ background: 'rgba(4, 12, 24, 0.6)', padding: '12px', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{s.title}</span>
-                      <Icon size={16} color={s.color} />
-                    </div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#FFFFFF', margin: '4px 0', fontFamily: 'Outfit' }}>{s.val}</div>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{s.target}</div>
-                  </div>
-                );
-              })}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ width: '84px', height: '84px', borderRadius: '50%', border: '4px solid var(--accent-amber)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(245, 158, 11, 0.4)', flexShrink: 0 }}>
+                <span style={{ fontSize: '1.2rem', fontWeight: '900', color: '#FFFFFF' }}>{predMin}-{predMax}h</span>
+                <span style={{ fontSize: '0.62rem', color: 'var(--accent-amber)' }}>TARGET</span>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.82rem', fontWeight: '800', color: 'var(--accent-cyan)' }}>Fused Readiness: {fusedScore} / 100</div>
+                <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '2px' }}>Viability Index: <strong style={{ color: 'var(--accent-emerald)' }}>{viability}%</strong></div>
+                <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>Clutch Forecast: <strong>~{fryCount} Fry</strong></div>
+              </div>
+            </div>
+
+            {/* SECTION 12 METRICS */}
+            <div style={{ background: 'rgba(2, 5, 11, 0.6)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-subtle)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.72rem' }}>
+              <div>CV F1 Score: <strong style={{ color: 'var(--accent-emerald)' }}>94.2%</strong></div>
+              <div>Prediction Error: <strong style={{ color: 'var(--accent-cyan)' }}>±1.8h</strong></div>
+              <div>Sensor Reliability: <strong style={{ color: 'var(--accent-emerald)' }}>99.6%</strong></div>
+              <div>Safe Control: <strong style={{ color: 'var(--accent-emerald)' }}>100%</strong></div>
             </div>
           </div>
 
-          {/* ACTUATOR HARDWARE CONTROLS */}
-          <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* CLOSED-LOOP ACTUATORS */}
+          <div className="glass-panel" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Sliders size={20} color="var(--accent-cyan)" />
-                <h2 style={{ fontSize: '1.1rem', fontWeight: '800' }}>Closed-Loop IoT Hardware Actuators</h2>
-              </div>
-              <span className={`badge ${aiMode ? 'badge-cyan' : 'badge-amber'}`}>{aiMode ? 'AI FEEDBACK LOOP ACTIVE' : 'MANUAL OVERRIDE'}</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Sliders size={16} color="var(--accent-cyan)" /> Closed-Loop Actuators
+              </span>
+              <span className="badge badge-cyan">BOUNDED SAFETY</span>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {/* Heater */}
-              <div style={{ background: 'rgba(4, 12, 24, 0.6)', padding: '14px', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', fontWeight: '700' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Flame size={16} color="#FF6B6B" /> Smart Submersible Heater</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ background: 'rgba(4, 12, 24, 0.6)', padding: '10px', borderRadius: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', fontWeight: '700' }}>
+                  <span>Smart Heater</span>
                   <span style={{ color: 'var(--accent-cyan)' }}>{actuators.heater.setpoint}°C</span>
                 </div>
-                <input type="range" min="24.0" max="32.0" step="0.1" value={actuators.heater.setpoint} onChange={e => setActuators(p => ({ ...p, heater: { ...p.heater, setpoint: parseFloat(e.target.value) } }))} style={{ marginTop: '8px' }} />
+                <input type="range" min="24.0" max="32.0" step="0.1" value={actuators.heater.setpoint} onChange={e => setActuators(p => ({ ...p, heater: { ...p.heater, setpoint: parseFloat(e.target.value) } }))} style={{ marginTop: '6px' }} />
               </div>
 
-              {/* Aerator */}
-              <div style={{ background: 'rgba(4, 12, 24, 0.6)', padding: '14px', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', fontWeight: '700' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Wind size={16} color="#00F2FE" /> O2 Aeration Booster</span>
+              <div style={{ background: 'rgba(4, 12, 24, 0.6)', padding: '10px', borderRadius: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', fontWeight: '700' }}>
+                  <span>O2 Aeration Booster</span>
                   <span style={{ color: 'var(--accent-cyan)' }}>{actuators.aerator.flowRate}%</span>
                 </div>
-                <input type="range" min="10" max="100" value={actuators.aerator.flowRate} onChange={e => setActuators(p => ({ ...p, aerator: { ...p.aerator, flowRate: parseInt(e.target.value) } }))} style={{ marginTop: '8px' }} />
+                <input type="range" min="10" max="100" value={actuators.aerator.flowRate} onChange={e => setActuators(p => ({ ...p, aerator: { ...p.aerator, flowRate: parseInt(e.target.value) } }))} style={{ marginTop: '6px' }} />
               </div>
 
-              {/* Feeder */}
-              <div style={{ background: 'rgba(4, 12, 24, 0.6)', padding: '14px', borderRadius: '10px', border: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: '700' }}><Utensils size={16} color="#10B981" /> High-Protein Artemia Feeder</span>
-                <button onClick={() => confetti({ particleCount: 50 })} className="btn btn-primary" style={{ fontSize: '0.72rem', padding: '4px 10px' }}>Dispense Feed</button>
+              <div style={{ background: 'rgba(4, 12, 24, 0.6)', padding: '10px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.78rem', fontWeight: '700' }}>Artemia Auto-Feeder</span>
+                <button onClick={() => confetti({ particleCount: 40 })} className="btn btn-primary" style={{ fontSize: '0.7rem', padding: '4px 8px' }}>Dispense</button>
               </div>
             </div>
+          </div>
+
+          {/* CITATIONS & FAQ BOX */}
+          <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.74rem' }}>
+            <div style={{ fontWeight: '800', color: 'var(--accent-cyan)' }}>📚 Section 13 Literature & FAQ</div>
+            <div>• Prapti et al. (2022) - IoT Aquaculture (DOI: 10.1111/raq.12637)</div>
+            <div>• He et al. (2026) - Fish Behavior Vision (DOI: 10.1016/j.cosrev.2026.100896)</div>
+            <div>• FAO TECA (2022) - Water Quality Sensors</div>
           </div>
 
         </div>
