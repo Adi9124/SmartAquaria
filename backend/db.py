@@ -55,6 +55,19 @@ def init_db():
         )
     ''')
 
+    # 4. Email Alert Logs Table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS alert_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            recipient_email TEXT NOT NULL,
+            alert_title TEXT NOT NULL,
+            alert_message TEXT NOT NULL,
+            severity TEXT NOT NULL,
+            status TEXT DEFAULT 'SENT',
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
     conn.commit()
     conn.close()
     print(f"[DB SUCCESS] Python FastAPI SQLite Database Initialized at {DB_PATH}")

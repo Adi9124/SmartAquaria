@@ -63,17 +63,32 @@ export const ApiService = {
     }
   },
 
-  // Post Actuator Action Log to SQLite
-  async logActuatorAction(actuatorData) {
+  // Post Actuator Command Log to SQLite
+  async logActuatorAction(actionData) {
     try {
       const res = await fetch(`${API_BASE_URL}/actuators/log`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(actuatorData)
+        body: JSON.stringify(actionData)
       });
       return await res.json();
     } catch (err) {
-      console.warn('Could not post actuator log:', err.message);
+      console.warn('Could not post actuator log to SQLite API:', err.message);
+      return null;
+    }
+  },
+
+  // Post Email Alert Notification to Python FastAPI & SQLite
+  async sendEmailAlert(alertData) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/alerts/email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(alertData)
+      });
+      return await res.json();
+    } catch (err) {
+      console.warn('Could not dispatch email alert notification:', err.message);
       return null;
     }
   }

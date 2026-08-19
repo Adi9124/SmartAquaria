@@ -52,6 +52,13 @@ class ActuatorSchema(BaseModel):
     setpoint: Optional[float] = 0.0
     triggerType: Optional[str] = "MANUAL"
 
+class EmailAlertSchema(BaseModel):
+    recipientEmail: str
+    alertTitle: str
+    alertMessage: str
+    severity: Optional[str] = "CRITICAL"
+    tankId: Optional[str] = "TANK-01"
+
 class CVInferenceRequest(BaseModel):
     frameId: int
     tankId: Optional[str] = "TANK-01"
@@ -135,6 +142,32 @@ def log_actuator_action(data: ActuatorSchema):
     conn.close()
 
     return {"id": last_id, "message": "Actuator action logged to SQLite DB via Python FastAPI"}
+
+@app.post("/api/alerts/email", status_code=201)
+def send_email_alert(data: EmailAlertSchema):
+    """
+    Simulates sending email notification to Hatchery Manager and logs to SQLite DB.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO alert_logs (recipient_email, alert_title, alert_message, severity, status)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (data.recipientEmail, data.alertTitle, data.alertMessage, data.severity, 'SENT'))
+    
+    last_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+
+    print(f"[EMAIL DISPATCHED] To: {data.recipientEmail} | Subject: [{data.severity}] {data.alertTitle}")
+
+    return {
+        "id": last_id,
+        "status": "DISPATCHED",
+        "recipient": data.recipientEmail,
+        "subject": f"[{data.severity}] {data.alertTitle}",
+        "message": f"Email alert sent to {data.recipientEmail} via Python FastAPI Mailer Service."
+    }
 
 @app.post("/api/cv/predict")
 def cv_behavior_inference(req: CVInferenceRequest):
