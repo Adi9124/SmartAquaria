@@ -88,7 +88,7 @@ export const AIAdvisor = ({ simulator, species, aiLogs }) => {
             }}
           >
             <HelpCircle size={12} style={{ marginRight: '4px' }} />
-            Viva Q&A Cheat Sheet
+            FAQ & Q&A Guide
           </button>
         </div>
       </div>
@@ -198,11 +198,11 @@ export const AIAdvisor = ({ simulator, species, aiLogs }) => {
         </div>
       )}
 
-      {/* Tab Content 4: Professor Viva Q&A Cheat Sheet */}
+      {/* Tab Content 4: System FAQ & Q&A Guide */}
       {activeTab === 'VIVA' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.78rem' }}>
           <div style={{ fontWeight: '700', color: 'var(--accent-amber)', fontSize: '0.85rem' }}>
-            🎓 Section 15-20: Professor Viva Q&A Quick Reference
+            ❓ System FAQ & Project Q&A Guide
           </div>
 
           {[
