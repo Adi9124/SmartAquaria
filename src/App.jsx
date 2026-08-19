@@ -6,6 +6,7 @@ import { ActuatorControl } from './components/ActuatorControl';
 import { AIAdvisor } from './components/AIAdvisor';
 import { SpawningAnalytics } from './components/SpawningAnalytics';
 import { ScenarioSimulator } from './components/ScenarioSimulator';
+import { AlertSystem } from './components/AlertSystem';
 
 import { SPECIES_PROFILES, INITIAL_ACTUATOR_STATE } from './data/speciesData';
 import { AquariaSimulator } from './utils/simulationEngine';
@@ -32,7 +33,7 @@ export function App() {
   useEffect(() => {
     ApiService.checkHealth().then((data) => {
       if (data && data.status === 'HEALTHY') {
-        setDbStatus('SQLite DB Connected (Port 5000)');
+        setDbStatus('SQLite DB Connected (Port 8000)');
       } else {
         setDbStatus('Local Memory Mode');
       }
@@ -46,7 +47,6 @@ export function App() {
     simulatorRef.current.logEvent('Species Switched', 'system', `Active tank changed to ${newSpecies.name}`);
     setAiLogs([...simulatorRef.current.eventLogs]);
 
-    // Sync event with SQLite DB
     ApiService.logSpawningEvent({
       tankId: 'TANK-01',
       speciesId: newSpecies.id,
@@ -105,6 +105,22 @@ export function App() {
     });
   };
 
+  const handleAutoFix = (actionType) => {
+    if (actionType === 'HEATER') {
+      setActuators(prev => ({
+        ...prev,
+        heater: { ...prev.heater, setpoint: selectedSpecies.optimalSensors.temperature.target }
+      }));
+      simulatorRef.current.telemetry.temperature = selectedSpecies.optimalSensors.temperature.target;
+    } else if (actionType === 'PH_DOSING') {
+      simulatorRef.current.telemetry.ph = selectedSpecies.optimalSensors.ph.target;
+    } else if (actionType === 'AMMONIA_PURGE') {
+      simulatorRef.current.telemetry.ammonia = selectedSpecies.optimalSensors.ammonia.target;
+    }
+    simulatorRef.current.logEvent('Auto-Correct Action Executed', 'actuator', `Auto-correct action executed for ${actionType}`);
+    setAiLogs([...simulatorRef.current.eventLogs]);
+  };
+
   const handleManualTrigger = (type, logMessage) => {
     simulatorRef.current.logEvent('Manual Actuator Command', 'actuator', logMessage);
     setAiLogs([...simulatorRef.current.eventLogs]);
@@ -126,7 +142,6 @@ export function App() {
       }
     }, 100);
 
-    // Periodic telemetry persistence to Express REST API & SQLite DB every 6 seconds
     const dbPersistInterval = setInterval(() => {
       if (simulatorRef.current) {
         ApiService.logTelemetry(simulatorRef.current.telemetry);
@@ -138,6 +153,14 @@ export function App() {
       clearInterval(dbPersistInterval);
     };
   }, []);
+
+  // Fused score calculation for alerts
+  const opt = selectedSpecies.optimalSensors;
+  const tempVar = Math.abs(telemetry.temperature - opt.temperature.target);
+  const phVar = Math.abs(telemetry.ph - opt.ph.target);
+  const envStability = Math.max(0, 100 - (tempVar * 15 + phVar * 25));
+  const behaviorScore = simulatorRef.current.aiClassification.courtship * 0.5 + simulatorRef.current.aiClassification.cleaning * 0.5;
+  const fusedScore = Math.min(100, Math.round(envStability * 0.45 + behaviorScore * 0.55));
 
   return (
     <div className="app-container">
@@ -154,9 +177,19 @@ export function App() {
 
       {/* Database Connection Banner */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', padding: '8px 16px', borderRadius: 'var(--radius-sm)', fontSize: '0.78rem', color: 'var(--accent-emerald)' }}>
-        <span>⚡ <strong>3-Tier Full-Stack Active</strong>: Express REST API (Port 5000) persistent connection to <code>smart_aquaria.db</code></span>
+        <span>⚡ <strong>3-Tier Full-Stack Active</strong>: Python FastAPI REST Server (Port 8000) persistent connection to <code>smart_aquaria.db</code></span>
         <span className="badge badge-emerald">{dbStatus}</span>
       </div>
+
+      {/* REAL-TIME IOT & AI ALERT SYSTEM BANNER */}
+      <AlertSystem
+        telemetry={telemetry}
+        species={selectedSpecies}
+        behaviorState={simulatorRef.current.behaviorState}
+        fusedScore={fusedScore}
+        onEmergencyO2={handleEmergencyBoost}
+        onAutoFix={handleAutoFix}
+      />
 
       {/* Interactive Scenario Control Toolbar */}
       <ScenarioSimulator
