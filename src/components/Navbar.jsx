@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, ShieldCheck, Cpu, AlertTriangle, Radio, Sparkles, ChevronDown } from 'lucide-react';
+import { Activity, Cpu, Radio, Sparkles, ChevronDown, CheckCircle, Eye, ShieldCheck } from 'lucide-react';
 import { SPECIES_PROFILES } from '../data/speciesData';
 
 export const Navbar = ({ 
@@ -11,7 +11,9 @@ export const Navbar = ({
   simTime 
 }) => {
   return (
-    <header className="glass-panel" style={{ padding: '14px 24px', marginBottom: '8px' }}>
+    <header className="glass-panel" style={{ padding: '14px 24px', marginBottom: '8px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      
+      {/* Main Top Row */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
         
         {/* Brand & Title */}
@@ -34,16 +36,16 @@ export const Navbar = ({
                 SmartAquaria
               </h1>
               <span className="badge badge-cyan" style={{ fontSize: '0.65rem' }}>
-                <Sparkles size={10} /> AI-IoT v2.4
+                <Sparkles size={10} /> Team 28 • Python FastAPI
               </span>
             </div>
             <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-              Intelligent Fish Breeding Detection & Automated Environmental Telemetry
+              AI-IoT System for Intelligent Detection & Management of Fish Breeding Behaviour
             </p>
           </div>
         </div>
 
-        {/* Species / Tank Selector */}
+        {/* Species / Tank Selector & AI Mode */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-dim)', letterSpacing: '0.05em' }}>
@@ -83,7 +85,7 @@ export const Navbar = ({
           {/* AI Mode Toggle */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', borderLeft: '1px solid var(--border-subtle)', paddingLeft: '16px' }}>
             <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-dim)', letterSpacing: '0.05em' }}>
-              Control Mode
+              Closed-Loop Control
             </span>
             <div 
               onClick={() => setAiMode(!aiMode)}
@@ -100,7 +102,7 @@ export const Navbar = ({
             >
               <Cpu size={16} color={aiMode ? 'var(--accent-cyan)' : 'var(--accent-amber)'} />
               <span style={{ fontSize: '0.8rem', fontWeight: '700', color: aiMode ? 'var(--accent-cyan)' : 'var(--accent-amber)' }}>
-                {aiMode ? 'CLOSED-LOOP AI AUTO' : 'MANUAL OVERRIDE'}
+                {aiMode ? 'AI SAFE AUTOMATION' : 'HUMAN OVERRIDE'}
               </span>
               <div className={`toggle-switch ${aiMode ? 'on' : ''}`} style={{ width: '32px', height: '18px' }}>
                 <div className="toggle-switch-handle" style={{ width: '14px', height: '14px', transform: aiMode ? 'translateX(14px)' : 'translateX(0)' }}></div>
@@ -109,13 +111,13 @@ export const Navbar = ({
           </div>
         </div>
 
-        {/* System Status Indicators */}
+        {/* System Indicators */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255, 255, 255, 0.03)', padding: '6px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
             <Radio size={14} color="var(--accent-emerald)" className="animate-pulse" />
             <div style={{ fontSize: '0.75rem' }}>
-              <div style={{ color: 'var(--text-muted)' }}>IoT Gateway</div>
-              <div style={{ fontWeight: '600', color: 'var(--accent-emerald)' }}>CONNECTED (12ms)</div>
+              <div style={{ color: 'var(--text-muted)' }}>FastAPI Gateway</div>
+              <div style={{ fontWeight: '600', color: 'var(--accent-emerald)' }}>CONNECTED (Port 8000)</div>
             </div>
           </div>
 
@@ -125,11 +127,45 @@ export const Navbar = ({
             title="Trigger high aeration & safe temperature lock"
             style={{ fontSize: '0.78rem' }}
           >
-            <AlertTriangle size={14} /> Emergency O2 Boost
+            Emergency O2 Boost
           </button>
         </div>
 
       </div>
+
+      {/* 7-Stage Working Model Pipeline Bar (Section 5 of Hackathon Document) */}
+      <div style={{
+        background: 'rgba(6, 9, 19, 0.6)',
+        border: '1px solid var(--border-subtle)',
+        borderRadius: 'var(--radius-sm)',
+        padding: '8px 14px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '8px',
+        fontSize: '0.72rem'
+      }}>
+        <span style={{ fontWeight: '700', color: 'var(--accent-cyan)' }}>
+          7-Stage Pipeline (Section 5):
+        </span>
+        {[
+          { stage: '1. Sense', desc: 'Camera & IoT Sensors' },
+          { stage: '2. Preprocess', desc: 'Frame Clean & Drift Check' },
+          { stage: '3. Detect', desc: 'YOLO Tracking' },
+          { stage: '4. Fuse', desc: 'Behavior + Water Fusion' },
+          { stage: '5. Predict', desc: '24h Window Model' },
+          { stage: '6. Act', desc: 'Bounded Safety Layer' },
+          { stage: '7. Dashboard', desc: 'Alerts & History' }
+        ].map((stg, idx) => (
+          <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)' }}>
+            <CheckCircle size={11} color="var(--accent-emerald)" />
+            <span style={{ color: '#FFFFFF', fontWeight: '600' }}>{stg.stage}</span>
+            <span style={{ color: 'var(--text-dim)', fontSize: '0.68rem' }}>({stg.desc})</span>
+          </div>
+        ))}
+      </div>
+
     </header>
   );
 };
