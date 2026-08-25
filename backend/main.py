@@ -249,10 +249,19 @@ def dispatch_real_email(recipient: str, title: str, message: str, severity: str 
         msg.attach(MIMEText(plain_text, "plain"))
         msg.attach(MIMEText(html_content, "html"))
 
-        # Connect and authenticate with Gmail SMTP SSL
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=12) as server:
-            server.login(sender_email, app_password)
-            server.sendmail(sender_email, [recipient], msg.as_string())
+        # Connect and authenticate with Gmail SMTP (Port 587 STARTTLS for cloud hosting compatibility)
+        try:
+            with smtplib.SMTP("smtp.gmail.com", 587, timeout=15) as server:
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                server.login(sender_email, app_password)
+                server.sendmail(sender_email, [recipient], msg.as_string())
+        except Exception as err587:
+            print(f"[SMTP 587 fallback to 465]: {err587}")
+            with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=15) as server:
+                server.login(sender_email, app_password)
+                server.sendmail(sender_email, [recipient], msg.as_string())
             
         return True, "Email alert successfully delivered via Gmail SMTP."
     except Exception as e:
