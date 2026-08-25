@@ -1,7 +1,20 @@
 import sqlite3
 import os
 
-DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'smart_aquaria.db'))
+def get_db_path():
+    if "DB_PATH" in os.environ:
+        return os.environ["DB_PATH"]
+    # Check parent directory
+    parent_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'smart_aquaria.db'))
+    try:
+        if os.path.exists(parent_path) or os.access(os.path.dirname(parent_path), os.W_OK):
+            return parent_path
+    except Exception:
+        pass
+    # Fallback to local directory
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), 'smart_aquaria.db'))
+
+DB_PATH = get_db_path()
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
