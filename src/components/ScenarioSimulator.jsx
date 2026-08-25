@@ -1,5 +1,5 @@
 import React from 'react';
-import { PlayCircle, AlertTriangle, ThermometerSnowflake, ShieldAlert, RotateCcw, Sparkles } from 'lucide-react';
+import { PlayCircle, AlertTriangle, ThermometerSnowflake, ShieldAlert, RotateCcw, Sparkles, Award } from 'lucide-react';
 
 export const ScenarioSimulator = ({ onTriggerScenario, onReset }) => {
   return (
@@ -49,6 +49,15 @@ export const ScenarioSimulator = ({ onTriggerScenario, onReset }) => {
           style={{ fontSize: '0.78rem' }}
         >
           <ShieldAlert size={14} color="var(--accent-rose)" /> Inter-Male Conflict
+        </button>
+
+        {/* Scenario 5: Load Team 28 Hackathon Report State */}
+        <button
+          className="btn btn-secondary"
+          onClick={() => onTriggerScenario('SIMULATE_HACKATHON_REPORT', 'Loaded Team 28 Hackathon Breeding Report snapshot (177 eggs, 0.08ppm NH3, 29.5°C)')}
+          style={{ fontSize: '0.78rem', background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.4)', color: 'var(--accent-amber)' }}
+        >
+          <Award size={14} color="var(--accent-amber)" /> Load Team 28 Report
         </button>
 
         {/* Reset */}

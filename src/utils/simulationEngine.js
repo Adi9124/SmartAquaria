@@ -175,6 +175,31 @@ export class AquariaSimulator {
       return;
     }
 
+    if (mode === 'SIMULATE_HACKATHON_REPORT') {
+      // Exact state matching Team 28 Hackathon Breeding Report & Analytics
+      this.behaviorState = 'EGG_LAYING';
+      this.nest.eggCount = 177;
+      this.spawningProgress = Math.min(100, Math.round((177 / this.nest.maxEggs) * 100));
+      this.telemetry.temperature = 29.5;
+      this.telemetry.ph = 6.2;
+      this.telemetry.dissolvedOxygen = 7.19;
+      this.telemetry.ammonia = 0.08;
+      this.telemetry.nitrate = 5;
+      this.telemetry.lightSpectrum = 350;
+      this.telemetry.turbidity = 0.4;
+      this.aiClassification = {
+        courtship: 30,
+        cleaning: 45,
+        eggLaying: 94,
+        parentalCare: 30,
+        aggression: 4,
+        modelName: 'YOLOv8-FishPose-v4',
+        fps: 58,
+        activeTrackingIds: 2
+      };
+      return;
+    }
+
     // Dynamic evaluation based on environmental harmony
     const tempOpt = Math.abs(this.telemetry.temperature - this.species.optimalSensors.temperature.target) < 1.0;
     const phOpt = Math.abs(this.telemetry.ph - this.species.optimalSensors.ph.target) < 0.3;

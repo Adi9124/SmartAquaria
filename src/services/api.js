@@ -91,5 +91,16 @@ export const ApiService = {
       console.warn('Could not dispatch email alert notification:', err.message);
       return null;
     }
+  },
+
+  // Fetch Team 28 Breeding Report from Python FastAPI
+  async getBreedingReport(tankId = 'TANK-01') {
+    try {
+      const res = await fetch(`${API_BASE_URL}/breeding/report?tankId=${tankId}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('Could not fetch breeding report from API:', err.message);
+      return null;
+    }
   }
 };

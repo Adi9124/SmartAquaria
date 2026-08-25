@@ -68,6 +68,30 @@ export function App() {
       simulatorRef.current.telemetry.temperature -= 2.5;
     } else if (mode === 'SIMULATE_AMMONIA_SPIKE') {
       simulatorRef.current.telemetry.ammonia = 0.08;
+    } else if (mode === 'SIMULATE_HACKATHON_REPORT') {
+      // Auto-select Discus species profile for the report
+      const discusProfile = SPECIES_PROFILES.find(s => s.id === 'discus');
+      if (discusProfile && selectedSpecies.id !== 'discus') {
+        setSelectedSpecies(discusProfile);
+        simulatorRef.current.setSpecies(discusProfile);
+      }
+      // Configure actuators to match report state
+      setActuators(prev => ({
+        ...prev,
+        heater: { ...prev.heater, setpoint: 29.5, power: 65 },
+        aerator: { ...prev.aerator, flowRate: 85 },
+        ledLighting: { ...prev.ledLighting, brightness: 58 }
+      }));
+      // Force simulator telemetry & eggs to report snapshot values
+      simulatorRef.current.telemetry.temperature = 29.5;
+      simulatorRef.current.telemetry.ph = 6.2;
+      simulatorRef.current.telemetry.dissolvedOxygen = 7.19;
+      simulatorRef.current.telemetry.ammonia = 0.08;
+      simulatorRef.current.telemetry.lightSpectrum = 350;
+      simulatorRef.current.nest.eggCount = 177;
+      simulatorRef.current.spawningProgress = Math.min(100, Math.round((177 / simulatorRef.current.nest.maxEggs) * 100));
+      simulatorRef.current.logEvent('Report State Loaded', 'system', 'Team 28 Hackathon Breeding Report snapshot activated – 177 eggs, 0.08ppm NH3 anomaly, Fused Score calibrated.');
+      setAiLogs([...simulatorRef.current.eventLogs]);
     }
 
     ApiService.logSpawningEvent({
@@ -222,6 +246,8 @@ export function App() {
             simulator={simulatorRef.current}
             species={selectedSpecies}
             aiLogs={aiLogs}
+            telemetry={telemetry}
+            onTriggerReportScenario={() => handleTriggerScenario('SIMULATE_HACKATHON_REPORT', 'Loaded Team 28 Hackathon Breeding Report snapshot (177 eggs, 0.08ppm NH3, 29.5°C)')}
           />
         </div>
 
