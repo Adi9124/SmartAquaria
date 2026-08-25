@@ -6,7 +6,7 @@ export const AlertSystem = ({ telemetry, species, behaviorState, fusedScore, onE
   const [alerts, setAlerts] = useState([]);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [emailAlertsEnabled, setEmailAlertsEnabled] = useState(true);
-  const [recipientEmail, setRecipientEmail] = useState('manager@smartaquaria.org');
+  const [recipientEmail, setRecipientEmail] = useState('adityanarayanapatra8@gmail.com');
   const [sentEmailLogs, setSentEmailLogs] = useState([]);
   const [dismissedAlerts, setDismissedAlerts] = useState([]);
 
