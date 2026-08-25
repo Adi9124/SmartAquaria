@@ -6,7 +6,7 @@ export const AlertSystem = ({ telemetry, species, behaviorState, fusedScore, onE
   const [alerts, setAlerts] = useState([]);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [emailAlertsEnabled, setEmailAlertsEnabled] = useState(true);
-  const [recipientEmail, setRecipientEmail] = useState('adityanarayanapatra8@gmail.com');
+  const [recipientEmail, setRecipientEmail] = useState('');
   const [sentEmailLogs, setSentEmailLogs] = useState([]);
   const [dismissedAlerts, setDismissedAlerts] = useState([]);
 
@@ -108,13 +108,14 @@ export const AlertSystem = ({ telemetry, species, behaviorState, fusedScore, onE
     if (audioEnabled && filtered.some(a => a.severity === 'CRITICAL')) {
       playAlertChime();
     }
-  }, [telemetry, species, fusedScore, dismissedAlerts, audioEnabled, emailAlertsEnabled]);
+  }, [telemetry, species, fusedScore, dismissedAlerts, audioEnabled, emailAlertsEnabled, recipientEmail]);
 
   // Dispatch Email Alert to Python FastAPI & SQLite
   const dispatchEmailNotification = (alert) => {
+    if (!recipientEmail || !recipientEmail.trim()) return;
     setSentEmailLogs(prev => [...prev, alert.id]);
     ApiService.sendEmailAlert({
-      recipientEmail: recipientEmail,
+      recipientEmail: recipientEmail.trim(),
       alertTitle: alert.title,
       alertMessage: alert.message,
       severity: alert.severity,
@@ -177,36 +178,38 @@ export const AlertSystem = ({ telemetry, species, behaviorState, fusedScore, onE
         gap: '10px',
         fontSize: '0.75rem'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: '280px' }}>
           <Mail size={15} color="var(--accent-cyan)" />
-          <span style={{ fontWeight: '700', color: 'var(--text-main)' }}>Manager Alert Email:</span>
+          <span style={{ fontWeight: '700', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>Manager Alert Email:</span>
           <input
             type="email"
             value={recipientEmail}
             onChange={(e) => setRecipientEmail(e.target.value)}
+            placeholder="Enter your email to receive live alerts (e.g. user@gmail.com)"
             style={{
               background: 'rgba(20, 31, 50, 0.9)',
               color: 'var(--accent-cyan)',
               border: '1px solid var(--border-cyan)',
               borderRadius: '4px',
-              padding: '3px 8px',
+              padding: '4px 10px',
               fontSize: '0.75rem',
-              fontFamily: 'JetBrains Mono',
+              fontFamily: 'JetBrains Mono, monospace',
               outline: 'none',
-              minWidth: '220px'
+              width: '100%',
+              maxWidth: '360px'
             }}
           />
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', color: 'var(--text-muted)' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
             <input
               type="checkbox"
               checked={emailAlertsEnabled}
               onChange={(e) => setEmailAlertsEnabled(e.target.checked)}
               style={{ accentColor: 'var(--accent-cyan)' }}
             />
-            Auto Email Dispatch Active
+            Auto Email Dispatch
           </label>
 
           <button
@@ -234,7 +237,13 @@ export const AlertSystem = ({ telemetry, species, behaviorState, fusedScore, onE
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <CheckCircle size={16} color="var(--accent-emerald)" />
-            <span><strong>All Systems Nominal</strong>: Water parameters & fish behavior within safe bounds. Email alerts standby for <code>{recipientEmail}</code>.</span>
+            <span>
+              <strong>All Systems Nominal</strong>: Water parameters & fish behavior within safe bounds. {recipientEmail.trim() ? (
+                <>Email alerts active for <code>{recipientEmail.trim()}</code>.</>
+              ) : (
+                <span style={{ color: 'var(--text-muted)' }}>Enter an alert email above to receive real-time anomaly notifications.</span>
+              )}
+            </span>
           </div>
           <span className="badge badge-emerald">6/6 Sensors Normal</span>
         </div>
